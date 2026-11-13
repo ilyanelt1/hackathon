@@ -1,155 +1,80 @@
 # MTS Intern Dashboard
 
-[![CI](https://github.com/ilyanelt1/mts-intern-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/ilyanelt1/mts-intern-dashboard/actions/workflows/ci.yml)
+[![CI](https://github.com/ilyanelt1/hackathon/actions/workflows/ci.yml/badge.svg)](https://github.com/ilyanelt1/hackathon/actions/workflows/ci.yml)
 
-Интеллектуальный аналитический дашборд программы стажировок МГТС. Проект предназначен для HR и руководителей: помогает отслеживать динамику оценок стажёров, анализировать обратную связь, выявлять риски и получать AI-инсайты.
+Интеллектуальный аналитический дашборд программы стажировок МГТС. Проект помогает HR и руководителям отслеживать динамику оценок, анализировать обратную связь, выявлять риски и получать AI-инсайты.
 
-## Возможности MVP
+## Текущий статус
 
-- **Overview:** ключевые показатели, динамика оценок, NPS, участие в опросах и количество рисков.
-- **Стажёры:** список, поиск, фильтрация и пагинация.
-- **Карточка стажёра:** история оценок, комментарии, сравнение с группой и наставником.
-- **AI-анализ:** тональность, тематическая классификация и суммаризация комментариев.
-- **Риск-скоринг:** объяснимые оценки риска с причинами и весами.
-- **Экспорт:** подготовка отчётов для HR (планируемое расширение).
+Создана основа MVP: FastAPI backend, health endpoint, PostgreSQL 17 в Docker Compose, автоматические тесты и CI. Доменная функциональность, frontend, ETL и AI-модули реализуются последовательно отдельными задачами.
 
-AI-результаты являются вспомогательной аналитикой и требуют проверки человеком. Они не должны использоваться как единственное основание для кадровых решений.
-
-## Архитектура
-
-Проект организован как монорепозиторий:
+## Структура
 
 ```text
-mts-intern-dashboard/
-├── backend/          # Backend API и бизнес-логика
-├── frontend/         # Web-интерфейс
-├── etl/              # Загрузка и обработка данных
-├── docs/             # Архитектура и документация
-├── scripts/          # Seed, backfill и служебные скрипты
-├── .github/
-│   └── workflows/    # CI GitHub Actions
+.
+├── backend/
+│   ├── app/main.py
+│   └── Dockerfile
+├── docs/architecture.md
+├── tests/test_health.py
+├── .github/workflows/ci.yml
+├── .pre-commit-config.yaml
 ├── docker-compose.yml
-├── .env.example
-├── .gitignore
+├── pyproject.toml
 └── README.md
 ```
 
-### Технологический стек
+## Стек
 
-| Компонент | Технологии |
-|---|---|
-| Backend | Python, FastAPI, Pydantic |
-| ORM и миграции | SQLAlchemy, Alembic |
-| Database | PostgreSQL |
-| Frontend | React, TypeScript, Vite |
-| Работа с API | TanStack Query, OpenAPI |
-| ETL | Python, SQL |
-| AI | Анализ тональности, классификация тем, суммаризация |
-| Контейнеризация | Docker, Docker Compose |
-| CI | GitHub Actions, Ruff, Pre-commit, Pytest |
+- Python 3.13, FastAPI, Uvicorn
+- PostgreSQL 17
+- Docker Compose
+- Ruff, Pre-commit, Pytest, GitHub Actions
 
-## Основные сущности данных
+## Быстрый запуск
 
-- `Intern` — стажёр.
-- `Mentor` — наставник.
-- `Group` — группа стажёров.
-- `Survey`, `Question` — опросы и вопросы.
-- `Response`, `Answer` — ответы на опросы.
-- `CommentAnalysis` — результаты AI-анализа комментариев.
-- `RiskFlag` — объяснимые флаги риска.
-- `MartInternMonth`, `MartGroupMonth` — аналитические витрины по месяцам.
-
-## Локальный запуск
-
-### Требования
-
-- Git
-- Docker Desktop или Docker Engine
-- Docker Compose v2
-- Python — версия будет зафиксирована в конфигурации backend
-- Node.js — версия будет зафиксирована в конфигурации frontend
-
-### Настройка
+Требуются Docker Engine/Desktop и Docker Compose v2.
 
 ```bash
-git clone https://github.com/ilyanelt1/mts-intern-dashboard.git
-cd mts-intern-dashboard
-
 cp .env.example .env
+docker compose up --build -d
 ```
 
-Заполни переменные окружения в `.env`. Не добавляй реальные секреты в Git.
+Проверка backend: `curl http://localhost:8000/health`
 
-### Запуск
+Ожидаемый ответ: `{"status":"ok"}`
+
+Остановка: `docker compose down`
+
+## Локальная разработка
 
 ```bash
-docker compose up --build
+python -m venv .venv
+# Windows PowerShell: .venv\Scripts\Activate.ps1
+# Linux/macOS: source .venv/bin/activate
+python -m pip install -e ".[dev]"
+ruff check .
+ruff format --check .
+pytest -q
+pre-commit install
+pre-commit run --all-files
 ```
 
-Проверка состояния backend:
+## CI
 
-```bash
-curl http://localhost:8000/health
-```
+GitHub Actions запускает четыре независимые job при Pull Request в main и push:
 
-Ожидаемый ответ:
-
-```json
-{
-  "status": "ok"
-}
-```
-
-Конкретные адреса frontend, backend и PostgreSQL, а также команды миграций будут уточнены в документации по мере реализации соответствующих задач.
-
-## CI / Quality gates
-
-GitHub Actions должен запускать независимые проверки:
-
-| Job | Назначение |
+| Job | Проверка |
 |---|---|
-| Ruff | Проверка Python-кода и форматирования |
-| Pre-commit | Запуск настроенных Git hooks |
-| Pytest | Unit- и интеграционные тесты |
-| Docker test | Проверка Docker Compose и сборки образов |
-
-Проверки выполняются при Pull Request и push в основную ветку. Изменения должны проходить CI до принятия в `main`.
-
-## План разработки
-
-Все задачи MVP объединяются в один GitHub milestone:
-
-**MVP: Интеллектуальный дашборд стажировок МГТС**
-
-Работа организуется через GitHub Issues и Kanban Project board:
-
-`Backlog → Ready → In Progress → Review → Done`
-
-Приоритеты и направления разработки задаются GitHub Labels.
+| Ruff | Линтинг и проверка форматирования Python |
+| Pre-commit | Все настроенные Git hooks |
+| Pytest | Автоматические тесты |
+| Docker test | Проверка Compose, сборка backend и smoke test /health |
 
 ## Документация
 
-По мере реализации будут добавлены:
-
-- `docs/architecture.md` — архитектура системы.
-- `docs/data-model.md` — модель данных и ER-диаграмма.
-- `docs/integration.md` — интеграция с сервисом анкетирования.
-- `docs/ai-eval.md` — оценка качества AI-моделей.
-- `docs/risk-scoring.md` — правила и пороги риск-скоринга.
-- `docs/demo.md` — сценарий демонстрации MVP.
+- [Архитектура](docs/architecture.md)
 
 ## Безопасность
 
-- Секреты хранятся в переменных окружения.
-- Доступ к API защищается авторизацией и ролями.
-- Webhook-запросы должны проходить проверку подписи.
-- Персональные данные стажёров не должны попадать в публичные логи.
-- AI-результаты сопровождаются объяснениями и ограничениями.
-
-## Статус проекта
-
-Проект находится на этапе планирования и реализации MVP. Актуальный прогресс отслеживается через GitHub Issues, milestone и Project board.
-
----
-
-**MTS Intern Dashboard** — аналитика, которая помогает замечать тенденции и вовремя поддерживать стажёров.
+Не коммитьте .env, токены, пароли и реальные персональные данные. Для локальной разработки используйте собственные значения из .env.example. AI-результаты должны быть вспомогательной аналитикой, а не единственным основанием кадровых решений.
